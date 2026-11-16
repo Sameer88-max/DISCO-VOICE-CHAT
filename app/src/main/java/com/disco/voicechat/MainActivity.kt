@@ -4,7 +4,6 @@ package com.disco.voicechat
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -18,215 +17,736 @@ import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
-import kotlin.random.Random
 
-private val AppBg = Color(0xFF090B1B)
-private val CardBg = Color(0xFF171B38)
-private val Purple = Color(0xFF985CFF)
-private val Cyan = Color(0xFF38D9FF)
-private val Gold = Color(0xFFFFC857)
-private val Pink = Color(0xFFFF4FA3)
-private val AppWhite = Color(0xFFF5F5FF)
+private val BG = Color(0xFF090B1B)
+private val CARD = Color(0xFF171B38)
+private val PURPLE = Color(0xFF985CFF)
+private val CYAN = Color(0xFF38D9FF)
+private val GOLD = Color(0xFFFFC857)
+private val PINK = Color(0xFFFF4FA3)
+private val WHITE = Color(0xFFF5F5FF)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            DiscoVoiceChat()
+            DiscoApp()
         }
     }
 }
 
 @Composable
-fun DiscoVoiceChat() {
+fun DiscoApp() {
 
-    var selectedTab by remember { mutableStateOf("Profile") }
-    var currentPage by remember { mutableStateOf("main") }
+    var loggedIn by remember { mutableStateOf(false) }
+    var page by remember { mutableStateOf("Welcome") }
+    var tab by remember { mutableStateOf("Home") }
 
-    var selectedCategory by remember { mutableStateOf("Frames") }
-    var selectedFilter by remember { mutableStateOf("Featured") }
+    var name by remember { mutableStateOf("DISCO USER") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
     var coins by remember { mutableIntStateOf(1000) }
     var diamonds by remember { mutableIntStateOf(0) }
 
-    var charmLevel by remember { mutableIntStateOf(1) }
-    var wealthLevel by remember { mutableIntStateOf(1) }
+    var charm by remember { mutableIntStateOf(1) }
+    var wealth by remember { mutableIntStateOf(1) }
 
-    var equippedFrame by remember {
-        mutableStateOf("Basic Blue Frame")
-    }
+    var vip by remember { mutableIntStateOf(0) }
+    var svip by remember { mutableIntStateOf(0) }
 
-    var equippedTitle by remember {
-        mutableStateOf("DISCO Member")
-    }
+    var frame by remember { mutableStateOf("Basic Blue Frame") }
+    var title by remember { mutableStateOf("DISCO Member") }
+    var entry by remember { mutableStateOf("Default Entry") }
 
-    var ownedItems by remember {
+    var owned by remember {
         mutableStateOf(
             setOf(
                 "Basic Blue Frame",
                 "DISCO Member",
-                "Welcome Gift"
+                "Default Entry"
             )
         )
     }
 
+    var username by remember { mutableStateOf("") }
+    var bio by remember { mutableStateOf("Welcome to DISCO VOICE CHAT") }
+
+    var selectedStore by remember { mutableStateOf("Frames") }
+    var selectedItem by remember { mutableStateOf("") }
+
+    var message by remember { mutableStateOf("") }
+    var search by remember { mutableStateOf("") }
+
+    var followers by remember { mutableIntStateOf(0) }
+    var following by remember { mutableIntStateOf(0) }
+
+    var registered by remember { mutableStateOf(false) }
+
     MaterialTheme(
         colorScheme = darkColorScheme(
-            primary = Purple,
-            secondary = Cyan,
-            background = AppBg,
-            surface = CardBg
+            primary = PURPLE,
+            secondary = CYAN,
+            background = BG,
+            surface = CARD
         )
     ) {
+
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = AppBg
+            color = BG
         ) {
 
-            if (currentPage == "store") {
+            if (!loggedIn) {
 
-                StoreScreen(
-                    category = selectedCategory,
-                    filter = selectedFilter,
-                    ownedItems = ownedItems,
-                    equippedFrame = equippedFrame,
-                    equippedTitle = equippedTitle,
-                    coins = coins,
-                    onCategory = { selectedCategory = it },
-                    onFilter = { selectedFilter = it },
-                    onBack = { currentPage = "main" },
-                    onBuy = { item ->
-                        if (item !in ownedItems) {
-                            ownedItems = ownedItems + item
+                AuthScreen(
+                    onLogin = { e, p ->
+                        email = e
+                        password = p
+                        if (e.contains("@") && p.length >= 6) {
+                            name = e.substringBefore("@")
+                                .uppercase()
+                            loggedIn = true
+                            page = "Main"
                         }
                     },
-                    onEquip = { item ->
-                        if (item in ownedItems) {
-                            if (selectedCategory == "Frames") {
-                                equippedFrame = item
-                            }
-                            if (selectedCategory == "Titles") {
-                                equippedTitle = item
-                            }
+                    onRegister = { n, e, p ->
+                        if (n.isNotBlank() &&
+                            e.contains("@") &&
+                            p.length >= 6
+                        ) {
+                            name = n
+                            email = e
+                            registered = true
+                            loggedIn = true
+                            page = "Main"
                         }
                     }
                 )
 
             } else {
 
-                Scaffold(
-                    containerColor = AppBg,
-                    bottomBar = {
+                when (page) {
 
-                        NavigationBar(
-                            containerColor = CardBg
-                        ) {
+                    "Main" -> MainDashboard(
+                        tab = tab,
+                        name = name,
+                        frame = frame,
+                        title = title,
+                        coins = coins,
+                        diamonds = diamonds,
+                        charm = charm,
+                        wealth = wealth,
+                        vip = vip,
+                        svip = svip,
+                        onTab = { tab = it },
+                        onPage = { page = it }
+                    )
 
-                            val tabs = listOf(
-                                "Home",
-                                "Friends",
-                                "Rooms",
-                                "Messages",
-                                "Profile"
-                            )
-
-                            tabs.forEach { tab ->
-
-                                val icon = when (tab) {
-                                    "Home" -> Icons.Default.Home
-                                    "Friends" -> Icons.Default.People
-                                    "Rooms" -> Icons.Default.Mic
-                                    "Messages" -> Icons.Default.Chat
-                                    else -> Icons.Default.Person
+                    "Store" -> StorePage(
+                        category = selectedStore,
+                        owned = owned,
+                        coins = coins,
+                        frame = frame,
+                        title = title,
+                        entry = entry,
+                        onBack = { page = "Main" },
+                        onCategory = { selectedStore = it },
+                        onBuy = { item, price ->
+                            if (coins >= price && item !in owned) {
+                                coins -= price
+                                owned = owned + item
+                                selectedItem = item
+                                message = "$item purchased successfully"
+                            } else if (item in owned) {
+                                message = "Already owned"
+                            } else {
+                                message = "Not enough coins"
+                            }
+                        },
+                        onEquip = { item ->
+                            if (item in owned) {
+                                when (selectedStore) {
+                                    "Frames" -> frame = item
+                                    "Titles" -> title = item
+                                    "Entry Effects" -> entry = item
                                 }
-
-                                NavigationBarItem(
-                                    selected = selectedTab == tab,
-                                    onClick = {
-                                        selectedTab = tab
-                                    },
-                                    icon = {
-                                        Icon(icon, contentDescription = tab)
-                                    },
-                                    label = {
-                                        Text(tab)
-                                    },
-                                    colors = NavigationBarItemDefaults.colors(
-                                        selectedIconColor = Cyan,
-                                        selectedTextColor = Cyan,
-                                        indicatorColor = Purple.copy(alpha = 0.2f),
-                                        unselectedIconColor = AppWhite.copy(alpha = 0.6f),
-                                        unselectedTextColor = AppWhite.copy(alpha = 0.6f)
-                                    )
-                                )
+                                message = "$item equipped"
                             }
                         }
-                    }
-                ) { padding ->
+                    )
 
-                    when (selectedTab) {
+                    "Wallet" -> WalletPage(
+                        coins = coins,
+                        diamonds = diamonds,
+                        onBack = { page = "Main" }
+                    )
 
-                        "Profile" -> ProfileScreen(
-                            padding = padding,
-                            frame = equippedFrame,
-                            title = equippedTitle,
-                            coins = coins,
-                            diamonds = diamonds,
-                            charmLevel = charmLevel,
-                            wealthLevel = wealthLevel,
-                            openStore = {
-                                currentPage = "store"
+                    "VIP Membership", "SVIP Membership" ->
+                        MembershipPage(
+                            type = page,
+                            active = if (page == "VIP Membership") vip else svip,
+                            onActivate = {
+                                if (page == "VIP Membership") vip = it
+                                else svip = it
+                                message = "$page updated"
                             },
-                            openPage = {
-                                currentPage = it
+                            onBack = { page = "Main" }
+                        )
+
+                    "Charm Level" -> LevelPage(
+                        "Charm Level", charm,
+                        { page = "Main" }
+                    )
+
+                    "Wealth Level" -> LevelPage(
+                        "Wealth Level", wealth,
+                        { page = "Main" }
+                    )
+
+                    "Edit Profile" -> EditProfilePage(
+                        name = name,
+                        bio = bio,
+                        onSave = { n, b ->
+                            name = n
+                            bio = b
+                            page = "Main"
+                            tab = "Profile"
+                        },
+                        onBack = { page = "Main" }
+                    )
+
+                    else -> GeneralPage(
+                        page = page,
+                        search = search,
+                        onSearch = { search = it },
+                        onBack = { page = "Main" },
+                        onAction = { action ->
+                            message = action
+                        },
+                        onLogout = {
+                            loggedIn = false
+                            page = "Welcome"
+                            password = ""
+                        }
+                    )
+                }
+
+                if (message.isNotEmpty()) {
+                    AlertDialog(
+                        onDismissRequest = { message = "" },
+                        title = { Text("DISCO VOICE CHAT") },
+                        text = { Text(message) },
+                        confirmButton = {
+                            TextButton(
+                                onClick = { message = "" }
+                            ) {
+                                Text("OK")
                             }
-                        )
-
-                        "Home" -> SimpleScreen(
-                            "DISCO VOICE CHAT",
-                            "Discover rooms, creators and activities.",
-                            padding
-                        )
-
-                        "Friends" -> FriendsScreen(padding)
-
-                        "Rooms" -> SimpleScreen(
-                            "VOICE ROOMS",
-                            "Discover public and official voice rooms.",
-                            padding
-                        )
-
-                        "Messages" -> SimpleScreen(
-                            "MESSAGES",
-                            "Your conversations and message requests.",
-                            padding
-                        )
-                    }
+                        }
+                    )
                 }
             }
         }
     }
 }
 
-/* ---------------- PROFILE SCREEN ---------------- */
+/* AUTHENTICATION */
 
 @Composable
-fun ProfileScreen(
-    padding: PaddingValues,
+fun AuthScreen(
+    onLogin: (String, String) -> Unit,
+    onRegister: (String, String, String) -> Unit
+) {
+
+    var mode by remember { mutableStateOf("Welcome") }
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var pass by remember { mutableStateOf("") }
+    var showPass by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf("") }
+
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        Color(0xFF25134B),
+                        BG,
+                        Color(0xFF102D49)
+                    )
+                )
+            )
+    ) {
+
+        Column(
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+
+            Box(
+                Modifier
+                    .size(105.dp)
+                    .background(
+                        Brush.linearGradient(
+                            listOf(PURPLE, CYAN)
+                        ),
+                        CircleShape
+                    ),
+                Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.GraphicEq,
+                    null,
+                    tint = WHITE,
+                    modifier = Modifier.size(65.dp)
+                )
+            }
+
+            Spacer(Modifier.height(15.dp))
+
+            Text(
+                "DISCO",
+                fontSize = 35.sp,
+                fontWeight = FontWeight.Black,
+                color = WHITE
+            )
+
+            Text(
+                "VOICE CHAT",
+                fontSize = 20.sp,
+                color = CYAN,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                "Connect • Talk • Enjoy",
+                color = WHITE.copy(alpha = .7f)
+            )
+
+            Spacer(Modifier.height(30.dp))
+
+            Card(
+                Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = CARD
+                )
+            ) {
+
+                Column(Modifier.padding(22.dp)) {
+
+                    Text(
+                        when (mode) {
+                            "Login" -> "WELCOME BACK"
+                            "Register" -> "CREATE ACCOUNT"
+                            "Forgot" -> "RESET PASSWORD"
+                            else -> "WELCOME TO DISCO"
+                        },
+                        color = WHITE,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Black
+                    )
+
+                    Spacer(Modifier.height(18.dp))
+
+                    if (mode == "Welcome") {
+
+                        Text(
+                            "Your voice. Your friends. Your community.",
+                            color = WHITE,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(Modifier.height(20.dp))
+
+                        Button(
+                            onClick = { mode = "Login" },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                        ) {
+                            Text("LOGIN")
+                        }
+
+                        OutlinedButton(
+                            onClick = { mode = "Register" },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("CREATE NEW ACCOUNT")
+                        }
+
+                    } else {
+
+                        if (mode == "Register") {
+                            OutlinedTextField(
+                                value = name,
+                                onValueChange = { name = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text("Full Name") },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Person, null)
+                                }
+                            )
+
+                            Spacer(Modifier.height(10.dp))
+                        }
+
+                        if (mode != "Forgot") {
+                            OutlinedTextField(
+                                value = email,
+                                onValueChange = { email = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text("Email Address") },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Email, null)
+                                },
+                                singleLine = true
+                            )
+
+                            Spacer(Modifier.height(10.dp))
+                        } else {
+                            OutlinedTextField(
+                                value = email,
+                                onValueChange = { email = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text("Registered Email") }
+                            )
+                            Spacer(Modifier.height(10.dp))
+                        }
+
+                        if (mode != "Forgot") {
+                            OutlinedTextField(
+                                value = pass,
+                                onValueChange = { pass = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text("Password") },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Lock, null)
+                                },
+                                trailingIcon = {
+                                    IconButton(
+                                        onClick = {
+                                            showPass = !showPass
+                                        }
+                                    ) {
+                                        Icon(
+                                            if (showPass)
+                                                Icons.Default.Visibility
+                                            else
+                                                Icons.Default.VisibilityOff,
+                                            null
+                                        )
+                                    }
+                                },
+                                visualTransformation =
+                                    if (showPass)
+                                        VisualTransformation.None
+                                    else
+                                        PasswordVisualTransformation(),
+                                singleLine = true
+                            )
+                        }
+
+                        if (error.isNotEmpty()) {
+                            Text(
+                                error,
+                                color = Color.Red,
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
+
+                        Spacer(Modifier.height(15.dp))
+
+                        Button(
+                            onClick = {
+                                error = ""
+
+                                when (mode) {
+                                    "Login" -> {
+                                        if (email.contains("@") &&
+                                            pass.length >= 6
+                                        ) onLogin(email, pass)
+                                        else error =
+                                            "Enter valid email and password"
+                                    }
+
+                                    "Register" -> {
+                                        if (name.isNotBlank() &&
+                                            email.contains("@") &&
+                                            pass.length >= 6
+                                        ) {
+                                            onRegister(name, email, pass)
+                                        } else {
+                                            error = "Complete all fields correctly"
+                                        }
+                                    }
+
+                                    "Forgot" -> {
+                                        error =
+                                            "Connect Firebase Authentication for password reset"
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                        ) {
+                            Text(
+                                when (mode) {
+                                    "Register" -> "REGISTER"
+                                    "Forgot" -> "RESET PASSWORD"
+                                    else -> "LOGIN"
+                                }
+                            )
+                        }
+
+                        TextButton(
+                            onClick = {
+                                error = ""
+                                mode = when (mode) {
+                                    "Login" -> "Forgot"
+                                    else -> "Login"
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                if (mode == "Login")
+                                    "Forgot Password?"
+                                else "Back to Login",
+                                color = CYAN
+                            )
+                        }
+
+                        if (mode == "Login") {
+                            TextButton(
+                                onClick = {
+                                    error = ""
+                                    mode = "Register"
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Create New Account")
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            Text(
+                "DISCO VOICE CHAT • OFFICIAL APP",
+                color = Color.Gray,
+                fontSize = 11.sp
+            )
+        }
+    }
+}
+
+/* MAIN DASHBOARD */
+
+@Composable
+fun MainDashboard(
+    tab: String,
+    name: String,
     frame: String,
     title: String,
     coins: Int,
     diamonds: Int,
-    charmLevel: Int,
-    wealthLevel: Int,
-    openStore: () -> Unit,
-    openPage: (String) -> Unit
+    charm: Int,
+    wealth: Int,
+    vip: Int,
+    svip: Int,
+    onTab: (String) -> Unit,
+    onPage: (String) -> Unit
+) {
+
+    Scaffold(
+        containerColor = BG,
+        bottomBar = {
+
+            NavigationBar(
+                containerColor = CARD
+            ) {
+
+                listOf(
+                    "Home", "Friends", "Rooms",
+                    "Messages", "Profile"
+                ).forEach {
+
+                    val icon = when (it) {
+                        "Home" -> Icons.Default.Home
+                        "Friends" -> Icons.Default.People
+                        "Rooms" -> Icons.Default.Mic
+                        "Messages" -> Icons.Default.Chat
+                        else -> Icons.Default.Person
+                    }
+
+                    NavigationBarItem(
+                        selected = tab == it,
+                        onClick = { onTab(it) },
+                        icon = {
+                            Icon(icon, null)
+                        },
+                        label = { Text(it) },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = CYAN,
+                            selectedTextColor = CYAN,
+                            indicatorColor = PURPLE.copy(alpha = .2f)
+                        )
+                    )
+                }
+            }
+        }
+    ) { padding ->
+
+        when (tab) {
+
+            "Profile" -> ProfilePage(
+                padding, name, frame, title,
+                coins, diamonds, charm, wealth, vip, svip,
+                onPage
+            )
+
+            "Home" -> HomePage(
+                padding, name, onPage
+            )
+
+            "Friends" -> SocialPage(
+                padding, "Friends", onPage
+            )
+
+            "Rooms" -> SocialPage(
+                padding, "Voice Rooms", onPage
+            )
+
+            "Messages" -> SocialPage(
+                padding, "Messages", onPage
+            )
+        }
+    }
+}
+
+/* HOME */
+
+@Composable
+fun HomePage(
+    padding: PaddingValues,
+    name: String,
+    onPage: (String) -> Unit
 ) {
 
     Column(
-        modifier = Modifier
+        Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .verticalScroll(rememberScrollState())
+            .padding(18.dp)
+    ) {
+
+        Text(
+            "DISCO VOICE CHAT",
+            color = WHITE,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Black
+        )
+
+        Text(
+            "Welcome, $name",
+            color = CYAN
+        )
+
+        Spacer(Modifier.height(20.dp))
+
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = CARD
+            ),
+            shape = RoundedCornerShape(22.dp)
+        ) {
+            Column(Modifier.padding(20.dp)) {
+                Icon(
+                    Icons.Default.GraphicEq,
+                    null,
+                    tint = PURPLE,
+                    modifier = Modifier.size(45.dp)
+                )
+                Text(
+                    "Discover Voice Community",
+                    color = WHITE,
+                    fontSize = 21.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "Meet people and explore voice rooms.",
+                    color = Color.LightGray
+                )
+            }
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        Section("QUICK ACCESS")
+
+        MenuGrid(
+            listOf(
+                "Voice Rooms",
+                "Friends",
+                "Messages",
+                "Wallet",
+                "Store",
+                "VIP Membership",
+                "Daily Tasks",
+                "Notifications"
+            ),
+            onPage
+        )
+
+        Spacer(Modifier.height(20.dp))
+
+        Section("DISCOVER")
+
+        listOf(
+            "Popular Rooms",
+            "Official Rooms",
+            "New Creators",
+            "Events",
+            "Rankings"
+        ).forEach {
+            MenuRow(it) { onPage(it) }
+        }
+    }
+}
+
+/* PROFILE */
+
+@Composable
+fun ProfilePage(
+    padding: PaddingValues,
+    name: String,
+    frame: String,
+    title: String,
+    coins: Int,
+    diamonds: Int,
+    charm: Int,
+    wealth: Int,
+    vip: Int,
+    svip: Int,
+    onPage: (String) -> Unit
+) {
+
+    Column(
+        Modifier
             .fillMaxSize()
             .padding(padding)
             .verticalScroll(rememberScrollState())
@@ -234,103 +754,85 @@ fun ProfileScreen(
     ) {
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                "MY PROFILE",
-                color = AppWhite,
-                fontSize = 21.sp,
-                fontWeight = FontWeight.Black
-            )
-
-            IconButton(onClick = {
-                openPage("Settings")
-            }) {
-                Icon(
-                    Icons.Default.Settings,
-                    contentDescription = "Settings",
-                    tint = Cyan
-                )
+            Section("MY PROFILE")
+            IconButton(
+                onClick = { onPage("Settings") }
+            ) {
+                Icon(Icons.Default.Settings, null, tint = CYAN)
             }
         }
 
-        Spacer(Modifier.height(15.dp))
-
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(25.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color(0xFF22234F)
-            )
+                containerColor = Color(0xFF25234F)
+            ),
+            shape = RoundedCornerShape(25.dp)
         ) {
 
-            Box(
-                modifier = Modifier
+            Column(
+                Modifier
+                    .fillMaxWidth()
                     .background(
                         Brush.linearGradient(
                             listOf(
-                                Color(0xFF252052),
-                                Color(0xFF102E4C),
-                                Color(0xFF42164D)
+                                Color(0xFF28235C),
+                                Color(0xFF12334D),
+                                Color(0xFF421B55)
                             )
                         )
                     )
-                    .padding(20.dp)
+                    .padding(22.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Avatar(frame, 105)
+
+                Spacer(Modifier.height(12.dp))
+
+                Text(
+                    name,
+                    color = WHITE,
+                    fontSize = 23.sp,
+                    fontWeight = FontWeight.Black
+                )
+
+                Text(
+                    "DISCO ID: 10000001",
+                    color = CYAN
+                )
+
+                Text(
+                    title,
+                    color = GOLD,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
+                    Stat("Charm", "Lv.$charm")
+                    Stat("Wealth", "Lv.$wealth")
+                    Stat("VIP", if (vip > 0) "Lv.$vip" else "Inactive")
+                }
 
-                    AvatarPreview(frame, 115)
+                Spacer(Modifier.height(10.dp))
 
-                    Spacer(Modifier.height(12.dp))
+                Stat(
+                    "SVIP",
+                    if (svip > 0) "Lv.$svip" else "Inactive"
+                )
 
-                    Text(
-                        "DISCO USER",
-                        color = AppWhite,
-                        fontSize = 23.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Text(
-                        "DISCO ID: 10000001",
-                        color = Cyan,
-                        fontSize = 13.sp
-                    )
-
-                    Text(
-                        title,
-                        color = Gold,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(Modifier.height(15.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-
-                        ProfileStat("Charm", "Lv.$charmLevel")
-                        ProfileStat("Wealth", "Lv.$wealthLevel")
-                        ProfileStat("VIP", "Inactive")
-                    }
-
-                    Spacer(Modifier.height(15.dp))
-
-                    OutlinedButton(
-                        onClick = {
-                            openPage("Edit Profile")
-                        }
-                    ) {
-                        Icon(Icons.Default.Edit, null)
-                        Spacer(Modifier.width(6.dp))
-                        Text("Edit Profile")
-                    }
+                OutlinedButton(
+                    onClick = { onPage("Edit Profile") }
+                ) {
+                    Icon(Icons.Default.Edit, null)
+                    Text(" Edit Profile")
                 }
             }
         }
@@ -340,25 +842,19 @@ fun ProfileScreen(
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-
-            BalanceCard(
-                "Gold Coins",
-                coins.toString(),
-                Gold,
-                Modifier.weight(1f)
-            )
-
-            BalanceCard(
-                "Diamonds",
-                diamonds.toString(),
-                Cyan,
-                Modifier.weight(1f)
-            )
+            Balance("Gold Coins", coins, GOLD,
+                Modifier.weight(1f)) {
+                onPage("Wallet")
+            }
+            Balance("Diamonds", diamonds, CYAN,
+                Modifier.weight(1f)) {
+                onPage("Wallet")
+            }
         }
 
         Spacer(Modifier.height(20.dp))
 
-        SectionTitle("PROFILE & SOCIAL")
+        Section("PROFILE & SOCIAL")
 
         MenuGrid(
             listOf(
@@ -371,12 +867,12 @@ fun ProfileScreen(
                 "Agency",
                 "My Collection"
             ),
-            openPage
+            onPage
         )
 
-        Spacer(Modifier.height(17.dp))
+        Spacer(Modifier.height(18.dp))
 
-        SectionTitle("MEMBERSHIP & LEVELS")
+        Section("MEMBERSHIP & LEVELS")
 
         MenuGrid(
             listOf(
@@ -385,66 +881,32 @@ fun ProfileScreen(
                 "Charm Level",
                 "Wealth Level"
             ),
-            openPage
+            onPage
         )
 
-        Spacer(Modifier.height(17.dp))
+        Spacer(Modifier.height(18.dp))
 
-        SectionTitle("COSMETICS & STORE")
+        Section("COSMETICS STORE")
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    openStore()
-                },
-            colors = CardDefaults.cardColors(
-                containerColor = CardBg
-            ),
-            shape = RoundedCornerShape(18.dp)
-        ) {
-
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Icon(
-                    Icons.Default.Storefront,
-                    null,
-                    tint = Gold,
-                    modifier = Modifier.size(32.dp)
-                )
-
-                Spacer(Modifier.width(12.dp))
-
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        "OPEN DISCO STORE",
-                        color = AppWhite,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Text(
-                        "Frames • Entry Effects • Titles • Badges",
-                        color = AppWhite.copy(alpha = 0.65f),
-                        fontSize = 11.sp
-                    )
-                }
-
-                Icon(
-                    Icons.Default.ChevronRight,
-                    null,
-                    tint = Cyan
-                )
-            }
+        MenuRow("Open DISCO Store") {
+            onPage("Store")
         }
 
-        Spacer(Modifier.height(17.dp))
+        MenuGrid(
+            listOf(
+                "Frames",
+                "Entry Effects",
+                "Backgrounds",
+                "Badges",
+                "Titles",
+                "Chat Bubbles"
+            ),
+            onPage
+        )
 
-        SectionTitle("WALLET & ACTIVITIES")
+        Spacer(Modifier.height(18.dp))
+
+        Section("WALLET & ACTIVITIES")
 
         MenuGrid(
             listOf(
@@ -452,143 +914,117 @@ fun ProfileScreen(
                 "Transaction History",
                 "Daily Tasks",
                 "Gift Collection",
+                "Notifications",
                 "Settings",
                 "Privacy & Security",
                 "Help & Support"
             ),
-            openPage
+            onPage
         )
-
-        Spacer(Modifier.height(20.dp))
     }
 }
 
-/* ---------------- STORE SCREEN ---------------- */
+/* STORE */
 
 @Composable
-fun StoreScreen(
+fun StorePage(
     category: String,
-    filter: String,
-    ownedItems: Set<String>,
-    equippedFrame: String,
-    equippedTitle: String,
+    owned: Set<String>,
     coins: Int,
-    onCategory: (String) -> Unit,
-    onFilter: (String) -> Unit,
+    frame: String,
+    title: String,
+    entry: String,
     onBack: () -> Unit,
-    onBuy: (String) -> Unit,
+    onCategory: (String) -> Unit,
+    onBuy: (String, Int) -> Unit,
     onEquip: (String) -> Unit
 ) {
 
     val categories = listOf(
-        "Frames",
-        "Entry Effects",
-        "Backgrounds",
-        "Name Styles",
-        "Chat Bubbles",
-        "Badges",
-        "Titles",
-        "Gift Collection"
+        "Frames", "Entry Effects", "Backgrounds",
+        "Name Styles", "Chat Bubbles",
+        "Badges", "Titles", "Gift Collection"
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(14.dp)
-    ) {
+    val items = when (category) {
+        "Frames" -> listOf(
+            "Basic Blue Frame", "Neon Pulse Frame",
+            "Purple Galaxy Frame", "VIP Royal Frame",
+            "SVIP Crown Frame", "Legendary Dragon Frame",
+            "Crystal Ring Frame", "Electric Storm Frame",
+            "Diamond Halo Frame", "Event Champion Frame"
+        )
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        "Entry Effects" -> listOf(
+            "Default Entry", "Blue Portal Entry",
+            "Neon Burst Entry", "Royal Crown Arrival",
+            "Galaxy Warp Entry", "Dragon Flame Arrival",
+            "Diamond Shower Entry", "VIP Spotlight",
+            "SVIP Cosmic Gate"
+        )
 
+        "Backgrounds" -> listOf(
+            "Midnight Galaxy", "Neon City",
+            "Royal Purple Hall", "Ocean Aurora",
+            "Cyber Blue", "Diamond Night"
+        )
+
+        "Name Styles" -> listOf(
+            "Neon Name", "Gold Royal Name",
+            "Rainbow Name", "Galaxy Name"
+        )
+
+        "Chat Bubbles" -> listOf(
+            "Neon Bubble", "Royal Bubble",
+            "Galaxy Bubble", "Diamond Bubble"
+        )
+
+        "Badges" -> listOf(
+            "Verified Badge", "VIP Badge",
+            "SVIP Badge", "Champion Badge",
+            "Official Badge"
+        )
+
+        "Titles" -> listOf(
+            "DISCO Member", "VIP Member",
+            "Royal Member", "Legend",
+            "Dragon King", "Super Star",
+            "Official Artist", "Champion"
+        )
+
+        else -> listOf(
+            "Rose Gift", "Heart Gift",
+            "Star Gift", "Crown Gift",
+            "Dragon Gift", "Galaxy Gift"
+        )
+    }
+
+    Column(Modifier.fillMaxSize().padding(14.dp)) {
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
-                Icon(
-                    Icons.Default.ArrowBack,
-                    null,
-                    tint = AppWhite
-                )
+                Icon(Icons.Default.ArrowBack, null, tint = WHITE)
             }
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    "DISCO STORE",
-                    color = AppWhite,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Black
-                )
-
-                Text(
-                    "Cosmetics & Collection",
-                    color = AppWhite.copy(alpha = 0.6f),
-                    fontSize = 12.sp
-                )
-            }
-
-            Icon(
-                Icons.Default.Diamond,
-                null,
-                tint = Gold
+            Text(
+                "DISCO STORE",
+                color = WHITE,
+                fontSize = 23.sp,
+                fontWeight = FontWeight.Black
             )
         }
 
+        Text("Your Coins: $coins", color = GOLD)
+
         Spacer(Modifier.height(12.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text("Your coins", color = AppWhite.copy(alpha = 0.7f))
-            Text("$coins", color = Gold, fontWeight = FontWeight.Bold)
-        }
-
-        Spacer(Modifier.height(10.dp))
 
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-
-            items(categories) { item ->
-
-                FilterChip(
-                    selected = category == item,
-                    onClick = {
-                        onCategory(item)
-                    },
-                    label = {
-                        Text(item)
-                    },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Purple,
-                        selectedLabelColor = AppWhite,
-                        labelColor = AppWhite
-                    )
-                )
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        Row(
             horizontalArrangement = Arrangement.spacedBy(7.dp)
         ) {
-
-            listOf(
-                "Featured",
-                "New",
-                "Popular",
-                "My Collection"
-            ).forEach { item ->
-
+            items(categories) {
                 FilterChip(
-                    selected = filter == item,
-                    onClick = {
-                        onFilter(item)
-                    },
-                    label = {
-                        Text(item, fontSize = 10.sp)
-                    }
+                    selected = category == it,
+                    onClick = { onCategory(it) },
+                    label = { Text(it) }
                 )
             }
         }
@@ -599,426 +1035,74 @@ fun StoreScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
 
-            val allItems = getCosmetics(category)
+            items(items) { item ->
 
-            val visibleItems = if (filter == "My Collection") {
-                allItems.filter { it in ownedItems }
-            } else {
-                allItems
-            }
+                val price = if (item.contains("Dragon") ||
+                    item.contains("SVIP") ||
+                    item.contains("Galaxy")
+                ) 500 else 150
 
-            items(visibleItems) { item ->
+                val equipped = item == frame ||
+                    item == title ||
+                    item == entry
 
-                val isOwned = item in ownedItems
-
-                val isEquipped =
-                    item == equippedFrame ||
-                    item == equippedTitle
-
-                StoreItemCard(
-                    item = item,
-                    category = category,
-                    owned = isOwned,
-                    equipped = isEquipped,
-                    onBuy = {
-                        onBuy(item)
-                    },
-                    onEquip = {
-                        onEquip(item)
-                    }
-                )
-            }
-        }
-    }
-}
-
-/* ---------------- COSMETIC CATALOG ---------------- */
-
-fun getCosmetics(category: String): List<String> {
-
-    return when (category) {
-
-        "Frames" -> listOf(
-            "Basic Blue Frame",
-            "Neon Pulse Frame",
-            "Purple Galaxy Frame",
-            "VIP Royal Frame",
-            "SVIP Crown Frame",
-            "Legendary Dragon Frame",
-            "Crystal Ring Frame",
-            "Electric Storm Frame",
-            "Diamond Halo Frame",
-            "Event Champion Frame",
-            "Ice Blue Frame",
-            "Fire Dragon Frame",
-            "Golden Royal Frame",
-            "Cyber Neon Frame",
-            "Galaxy Star Frame"
-        )
-
-        "Entry Effects" -> listOf(
-            "Blue Portal Entry",
-            "Neon Burst Entry",
-            "Royal Crown Arrival",
-            "Galaxy Warp Entry",
-            "Dragon Flame Arrival",
-            "Diamond Shower Entry",
-            "VIP Spotlight",
-            "SVIP Cosmic Gate",
-            "Electric Storm Entry",
-            "Star Explosion Entry",
-            "Crystal Portal Entry",
-            "Golden Light Arrival"
-        )
-
-        "Backgrounds" -> listOf(
-            "Midnight Galaxy",
-            "Neon City",
-            "Royal Purple Hall",
-            "Ocean Aurora",
-            "Cyber Blue",
-            "Diamond Night",
-            "Starry Universe",
-            "Blue Lightning",
-            "Pink Galaxy",
-            "Royal Black"
-        )
-
-        "Name Styles" -> listOf(
-            "Neon Name",
-            "Gold Royal Name",
-            "Ice Glow Name",
-            "Rainbow Aura Name",
-            "VIP Shine Name",
-            "Dragon Name",
-            "Galaxy Name",
-            "Crystal Name"
-        )
-
-        "Chat Bubbles" -> listOf(
-            "Cyber Bubble",
-            "Royal Bubble",
-            "Crystal Bubble",
-            "Neon Wave Bubble",
-            "Galaxy Bubble",
-            "VIP Bubble",
-            "SVIP Bubble"
-        )
-
-        "Badges" -> listOf(
-            "DISCO Member",
-            "Verified Creator",
-            "VIP Member",
-            "SVIP Member",
-            "Event Champion",
-            "Agency Head",
-            "Top Contributor",
-            "Official Staff",
-            "Voice Legend",
-            "Rising Star"
-        )
-
-        "Titles" -> listOf(
-            "DISCO Member",
-            "Rising Star",
-            "Voice Legend",
-            "VIP Star",
-            "SVIP Elite",
-            "Event Champion",
-            "Official Host",
-            "Agency Head",
-            "Music King",
-            "Music Queen",
-            "Legendary Singer",
-            "Super Creator"
-        )
-
-        else -> listOf(
-            "Welcome Gift",
-            "Blue Rose",
-            "Crystal Heart",
-            "Star Gift",
-            "Royal Crown",
-            "Galaxy Gift",
-            "Diamond Flower",
-            "Golden Trophy"
-        )
-    }
-}
-
-/* ---------------- STORE ITEM CARD ---------------- */
-
-@Composable
-fun StoreItemCard(
-    item: String,
-    category: String,
-    owned: Boolean,
-    equipped: Boolean,
-    onBuy: () -> Unit,
-    onEquip: () -> Unit
-) {
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = CardBg
-        )
-    ) {
-
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            CosmeticPreview(
-                category,
-                item,
-                62
-            )
-
-            Spacer(Modifier.width(12.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-
-                Text(
-                    item,
-                    color = AppWhite,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
-                )
-
-                Text(
-                    if (owned) "Owned • Collection"
-                    else "Available cosmetic",
-                    color = AppWhite.copy(alpha = 0.6f),
-                    fontSize = 10.sp
-                )
-
-                Text(
-                    when {
-                        item.contains("SVIP") -> "SVIP Collection"
-                        item.contains("VIP") -> "VIP Collection"
-                        item.contains("Legendary") -> "Legendary Collection"
-                        else -> "DISCO Collection"
-                    },
-                    color = Cyan,
-                    fontSize = 10.sp
-                )
-            }
-
-            if (owned) {
-
-                Button(
-                    onClick = onEquip,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (equipped) {
-                            Color(0xFF28645C)
-                        } else {
-                            Purple
-                        }
-                    ),
-                    contentPadding = PaddingValues(
-                        horizontal = 10.dp
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = CARD
                     )
                 ) {
-                    Text(
-                        if (equipped) "Equipped" else "Equip",
-                        fontSize = 10.sp
-                    )
-                }
 
-            } else {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(13.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
 
-                OutlinedButton(
-                    onClick = onBuy,
-                    contentPadding = PaddingValues(
-                        horizontal = 10.dp
-                    )
-                ) {
-                    Text("Get", fontSize = 11.sp)
-                }
-            }
-        }
-    }
-}
+                        CosmeticIcon(category)
 
-/* ---------------- COSMETIC PREVIEW ---------------- */
+                        Spacer(Modifier.width(12.dp))
 
-@Composable
-fun CosmeticPreview(
-    category: String,
-    name: String,
-    size: Int
-) {
-
-    Box(
-        modifier = Modifier
-            .size(size.dp)
-            .clip(RoundedCornerShape(15.dp))
-            .background(
-                Brush.linearGradient(
-                    listOf(
-                        Color(0xFF252C59),
-                        Color(0xFF49215F)
-                    )
-                )
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-
-        when (category) {
-
-            "Frames" -> AvatarPreview(name, size)
-
-            "Entry Effects" -> {
-
-                val transition = rememberInfiniteTransition(
-                    label = "entryAnimation"
-                )
-
-                val alpha by transition.animateFloat(
-                    initialValue = 0.4f,
-                    targetValue = 1f,
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(900),
-                        repeatMode = RepeatMode.Reverse
-                    ),
-                    label = "entryAlpha"
-                )
-
-                Icon(
-                    Icons.Default.Bolt,
-                    null,
-                    tint = Cyan.copy(alpha = alpha),
-                    modifier = Modifier.size((size * 0.6f).dp)
-                )
-            }
-
-            "Backgrounds" -> {
-
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.linearGradient(
-                                listOf(Purple, Cyan, Pink)
+                        Column(
+                            Modifier.weight(1f)
+                        ) {
+                            Text(item, color = WHITE,
+                                fontWeight = FontWeight.Bold)
+                            Text(
+                                if (item in owned)
+                                    "Owned"
+                                else "$price Gold Coins",
+                                color = GOLD,
+                                fontSize = 12.sp
                             )
-                        )
-                )
+                        }
+
+                        if (item in owned) {
+                            Button(
+                                onClick = { onEquip(item) }
+                            ) {
+                                Text(if (equipped) "Equipped" else "Equip")
+                            }
+                        } else {
+                            Button(
+                                onClick = { onBuy(item, price) }
+                            ) {
+                                Text("BUY")
+                            }
+                        }
+                    }
+                }
             }
-
-            "Badges" -> Icon(
-                Icons.Default.Verified,
-                null,
-                tint = Gold,
-                modifier = Modifier.size((size * 0.55f).dp)
-            )
-
-            "Titles" -> Icon(
-                Icons.Default.EmojiEvents,
-                null,
-                tint = Gold,
-                modifier = Modifier.size((size * 0.55f).dp)
-            )
-
-            "Chat Bubbles" -> Icon(
-                Icons.Default.ChatBubble,
-                null,
-                tint = Pink,
-                modifier = Modifier.size((size * 0.55f).dp)
-            )
-
-            else -> Icon(
-                Icons.Default.AutoAwesome,
-                null,
-                tint = Cyan,
-                modifier = Modifier.size((size * 0.55f).dp)
-            )
         }
     }
 }
 
-/* ---------------- AVATAR FRAME PREVIEW ---------------- */
+/* WALLET */
 
 @Composable
-fun AvatarPreview(
-    style: String,
-    size: Int
-) {
-
-    val frameColors = when {
-
-        style.contains("Royal") ||
-        style.contains("Crown") ->
-            listOf(Gold, Color(0xFFFF783C))
-
-        style.contains("Galaxy") ||
-        style.contains("Dragon") ->
-            listOf(Purple, Pink)
-
-        style.contains("Blue") ||
-        style.contains("Neon") ->
-            listOf(Cyan, Purple)
-
-        else ->
-            listOf(Pink, Gold)
-    }
-
-    Box(
-        modifier = Modifier.size(size.dp),
-        contentAlignment = Alignment.Center
-    ) {
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .border(
-                    width = (size / 14f).dp,
-                    brush = Brush.sweepGradient(frameColors),
-                    shape = CircleShape
-                )
-                .padding((size / 9f).dp)
-                .background(
-                    Color(0xFF10152D),
-                    CircleShape
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-
-            Icon(
-                Icons.Default.Person,
-                null,
-                tint = AppWhite,
-                modifier = Modifier.size((size * 0.55f).dp)
-            )
-        }
-
-        if (
-            style.contains("Royal") ||
-            style.contains("Crown")
-        ) {
-
-            Icon(
-                Icons.Default.WorkspacePremium,
-                null,
-                tint = Gold,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .size((size * 0.3f).dp)
-            )
-        }
-    }
-}
-
-/* ---------------- VIP / SVIP ---------------- */
-
-@Composable
-fun MembershipScreen(
-    title: String,
-    description: String,
+fun WalletPage(
+    coins: Int,
+    diamonds: Int,
     onBack: () -> Unit
 ) {
 
@@ -1029,74 +1113,51 @@ fun MembershipScreen(
             .padding(20.dp)
     ) {
 
-        IconButton(onClick = onBack) {
-            Icon(Icons.Default.ArrowBack, null, tint = AppWhite)
-        }
-
-        Icon(
-            Icons.Default.WorkspacePremium,
-            null,
-            tint = Gold,
-            modifier = Modifier.size(65.dp)
-        )
-
-        Text(
-            title,
-            color = Gold,
-            fontSize = 25.sp,
-            fontWeight = FontWeight.Black
-        )
-
-        Text(
-            description,
-            color = AppWhite.copy(alpha = 0.7f)
-        )
+        Header("MY WALLET", onBack)
 
         Spacer(Modifier.height(20.dp))
 
-        for (level in 1..10) {
+        Balance("Gold Coins", coins, GOLD,
+            Modifier.fillMaxWidth()) {}
 
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 5.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = CardBg
-                )
-            ) {
+        Spacer(Modifier.height(12.dp))
 
-                Row(
-                    Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+        Balance("Diamonds", diamonds, CYAN,
+            Modifier.fillMaxWidth()) {}
 
-                    Text(
-                        "$title $level",
-                        color = AppWhite,
-                        modifier = Modifier.weight(1f),
-                        fontWeight = FontWeight.Bold
-                    )
+        Spacer(Modifier.height(20.dp))
 
-                    Text(
-                        "Level $level",
-                        color = Cyan
-                    )
-                }
-            }
+        Section("WALLET OPTIONS")
+
+        listOf(
+            "Recharge Coins",
+            "Diamond Exchange",
+            "Gift Income",
+            "Transaction History",
+            "Official Coin Seller",
+            "Withdrawal",
+            "Wallet Support"
+        ).forEach {
+            MenuRow(it) {}
         }
 
+        Spacer(Modifier.height(20.dp))
+
         Text(
-            "Membership activation will be connected to the secure Owner Panel.",
-            color = AppWhite.copy(alpha = 0.6f),
+            "Wallet transactions and payments require secure server verification.",
+            color = Color.LightGray,
             fontSize = 12.sp
         )
     }
 }
 
-/* ---------------- WALLET ---------------- */
+/* MEMBERSHIP */
 
 @Composable
-fun WalletScreen(
+fun MembershipPage(
+    type: String,
+    active: Int,
+    onActivate: (Int) -> Unit,
     onBack: () -> Unit
 ) {
 
@@ -1104,183 +1165,197 @@ fun WalletScreen(
         Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(20.dp)
+            .padding(18.dp)
     ) {
 
-        BackHeader("WALLET", onBack)
+        Header(type.uppercase(), onBack)
 
-        BalanceCard(
-            "Gold Coins",
-            "1,000",
-            Gold,
-            Modifier.fillMaxWidth()
+        Spacer(Modifier.height(12.dp))
+
+        for (level in 1..10) {
+
+            Card(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 5.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = CARD
+                )
+            ) {
+
+                Row(
+                    Modifier.padding(15.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "$type Level $level",
+                            color = GOLD,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "Membership benefits",
+                            color = Color.LightGray
+                        )
+                    }
+
+                    if (active == level) {
+                        Text("ACTIVE", color = CYAN)
+                    } else {
+                        OutlinedButton(
+                            onClick = { onActivate(level) }
+                        ) {
+                            Text("Select")
+                        }
+                    }
+                }
+            }
+        }
+
+        Text(
+            "Real membership activation and payments require Owner Panel verification.",
+            color = Color.LightGray,
+            fontSize = 12.sp
         )
-
-        Spacer(Modifier.height(10.dp))
-
-        BalanceCard(
-            "Diamonds",
-            "0",
-            Cyan,
-            Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(20.dp))
-
-        SectionTitle("WALLET OPTIONS")
-
-        MenuGrid(
-            listOf(
-                "Coin Balance",
-                "Diamond Balance",
-                "Gift History",
-                "Transaction History",
-                "Rewards",
-                "Wallet Help"
-            )
-        ) {}
     }
 }
 
-/* ---------------- LEVEL SCREEN ---------------- */
+/* LEVELS */
 
 @Composable
-fun LevelScreen(
-    title: String,
+fun LevelPage(
+    type: String,
     level: Int,
     onBack: () -> Unit
 ) {
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .padding(20.dp)
-    ) {
+    Column(Modifier.fillMaxSize().padding(20.dp)) {
 
-        BackHeader(title, onBack)
+        Header(type, onBack)
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(30.dp))
 
         Text(
             "Current Level: $level",
-            color = Gold,
-            fontSize = 23.sp,
+            color = GOLD,
+            fontSize = 24.sp,
             fontWeight = FontWeight.Bold
         )
 
         Spacer(Modifier.height(15.dp))
 
         LinearProgressIndicator(
-            progress = { 0.35f },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(9.dp)
-                .clip(CircleShape),
-            color = Cyan,
-            trackColor = CardBg
+            progress = { .35f },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(15.dp))
+
+        Text(
+            "Level progress and rewards are awaiting server integration.",
+            color = Color.LightGray
+        )
+    }
+}
+
+/* EDIT PROFILE */
+
+@Composable
+fun EditProfilePage(
+    name: String,
+    bio: String,
+    onSave: (String, String) -> Unit,
+    onBack: () -> Unit
+) {
+
+    var newName by remember { mutableStateOf(name) }
+    var newBio by remember { mutableStateOf(bio) }
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(20.dp)
+    ) {
+
+        Header("EDIT PROFILE", onBack)
+
+        Spacer(Modifier.height(20.dp))
+
+        Avatar("Basic Blue Frame", 90)
+
+        OutlinedTextField(
+            value = newName,
+            onValueChange = { newName = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Username") }
         )
 
         Spacer(Modifier.height(12.dp))
 
-        Text(
-            "Progress to next level",
-            color = AppWhite
+        OutlinedTextField(
+            value = newBio,
+            onValueChange = { newBio = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Bio") }
         )
 
+        Spacer(Modifier.height(15.dp))
+
+        Button(
+            onClick = {
+                if (newName.isNotBlank()) {
+                    onSave(newName, newBio)
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("SAVE PROFILE")
+        }
+
         Text(
-            "Level progress and rewards will be calculated by the server.",
-            color = AppWhite.copy(alpha = 0.6f),
+            "Gallery photo upload requires Android image picker integration.",
+            color = Color.LightGray,
             fontSize = 12.sp
         )
     }
 }
 
-/* ---------------- FRIENDS ---------------- */
-
-@Composable
-fun FriendsScreen(padding: PaddingValues) {
-
-    Column(
-        Modifier
-            .fillMaxSize()
-            .padding(padding)
-            .padding(18.dp)
-    ) {
-
-        Text(
-            "FRIENDS",
-            color = AppWhite,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Black
-        )
-
-        Spacer(Modifier.height(15.dp))
-
-        OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = {
-                Text("Search by name or DISCO ID")
-            },
-            leadingIcon = {
-                Icon(Icons.Default.Search, null)
-            },
-            singleLine = true
-        )
-
-        Spacer(Modifier.height(15.dp))
-
-        MenuGrid(
-            listOf(
-                "Friends",
-                "Following",
-                "Followers",
-                "Friend Requests",
-                "Blocked Users"
-            )
-        ) {}
-    }
-}
-
-/* ---------------- GENERAL PAGE ---------------- */
+/* GENERAL PAGES */
 
 @Composable
 fun GeneralPage(
     page: String,
-    onBack: () -> Unit
+    search: String,
+    onSearch: (String) -> Unit,
+    onBack: () -> Unit,
+    onAction: (String) -> Unit,
+    onLogout: () -> Unit
 ) {
 
     val options = when (page) {
 
         "Settings" -> listOf(
-            "Account Settings",
-            "Notifications",
-            "Sound Settings",
-            "Language",
-            "Privacy",
-            "Security",
-            "Blocked Users",
-            "Logout"
+            "Account Settings", "Notifications",
+            "Sound Settings", "Language",
+            "Privacy", "Security", "Logout"
         )
 
         "Agency" -> listOf(
-            "Create Agency",
-            "Agency Information",
-            "Agency Head",
-            "Managers",
-            "Agency Hosts",
-            "Member Requests",
-            "Agency Rules"
+            "Create Agency", "Agency Information",
+            "Agency Head", "Managers",
+            "Agency Hosts", "Member Requests"
         )
 
-        "Edit Profile" -> listOf(
-            "Change Profile Photo",
-            "Change Username",
-            "Edit Bio",
-            "Country",
-            "Online Status",
-            "Profile Background"
+        "My ID & QR" -> listOf(
+            "DISCO ID: 10000001",
+            "Copy ID", "Share Profile", "Show QR Code"
+        )
+
+        "Daily Tasks" -> listOf(
+            "Login Reward", "Visit Voice Room",
+            "Follow Creator", "Complete Profile"
         )
 
         "Achievements" -> listOf(
@@ -1290,26 +1365,28 @@ fun GeneralPage(
             "Event Achievements"
         )
 
-        "Daily Tasks" -> listOf(
-            "Login Reward",
-            "Visit Voice Room",
-            "Follow Creator",
-            "Complete Profile",
-            "Collect Achievement"
+        "Voice Rooms" -> listOf(
+            "Public Rooms", "Official Rooms",
+            "Create Room", "Join Room"
         )
 
-        "My ID & QR" -> listOf(
-            "DISCO ID: 10000001",
-            "Copy ID",
-            "Share Profile",
-            "Show QR Code"
+        "Messages" -> listOf(
+            "Inbox", "Message Requests"
+        )
+
+        "Notifications" -> listOf(
+            "System Notifications",
+            "Friend Notifications",
+            "Gift Notifications"
+        )
+
+        "Following", "Followers", "Friends" -> listOf(
+            "Search Users", "User List", "Requests"
         )
 
         else -> listOf(
-            "Overview",
-            "Details",
-            "History",
-            "My Collection"
+            "Overview", "Details",
+            "History", "My Collection"
         )
     }
 
@@ -1317,132 +1394,213 @@ fun GeneralPage(
         Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(20.dp)
+            .padding(18.dp)
     ) {
 
-        BackHeader(page.uppercase(), onBack)
+        Header(page.uppercase()) {
+            onBack()
+        }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(15.dp))
 
-        options.forEach { item ->
+        OutlinedTextField(
+            value = search,
+            onValueChange = onSearch,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Search $page") },
+            leadingIcon = {
+                Icon(Icons.Default.Search, null)
+            },
+            singleLine = true
+        )
 
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 5.dp)
-                    .clickable {},
-                colors = CardDefaults.cardColors(
-                    containerColor = CardBg
-                )
-            ) {
+        Spacer(Modifier.height(15.dp))
 
-                Row(
-                    Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+        options.filter {
+            it.contains(search, ignoreCase = true)
+        }.forEach { item ->
 
-                    Text(
-                        item,
-                        color = AppWhite,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    Icon(
-                        Icons.Default.ChevronRight,
-                        null,
-                        tint = Cyan
-                    )
+            MenuRow(item) {
+                if (item == "Logout") {
+                    onLogout()
+                } else {
+                    onAction("$item requires its connected service")
                 }
             }
         }
     }
 }
 
-/* ---------------- REUSABLE COMPONENTS ---------------- */
+/* SOCIAL SCREENS */
 
 @Composable
-fun ProfileStat(label: String, value: String) {
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        Text(
-            value,
-            color = AppWhite,
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp
-        )
-
-        Text(
-            label,
-            color = AppWhite.copy(alpha = 0.6f),
-            fontSize = 10.sp
-        )
-    }
-}
-
-@Composable
-fun BalanceCard(
-    label: String,
-    value: String,
-    color: Color,
-    modifier: Modifier = Modifier
+fun SocialPage(
+    padding: PaddingValues,
+    type: String,
+    onPage: (String) -> Unit
 ) {
 
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = CardBg
-        ),
-        shape = RoundedCornerShape(16.dp)
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .padding(18.dp)
     ) {
 
-        Row(
-            Modifier.padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Text(
+            type.uppercase(),
+            color = WHITE,
+            fontSize = 23.sp,
+            fontWeight = FontWeight.Black
+        )
 
-            Icon(
-                if (label.contains("Diamond")) {
-                    Icons.Default.Diamond
-                } else {
-                    Icons.Default.MonetizationOn
-                },
-                null,
-                tint = color
-            )
+        Spacer(Modifier.height(18.dp))
 
-            Spacer(Modifier.width(9.dp))
-
-            Column {
-
-                Text(
-                    label,
-                    color = AppWhite.copy(alpha = 0.6f),
-                    fontSize = 11.sp
-                )
-
-                Text(
-                    value,
-                    color = AppWhite,
-                    fontWeight = FontWeight.Bold
-                )
+        OutlinedTextField(
+            value = "",
+            onValueChange = {},
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Search by name or DISCO ID") },
+            leadingIcon = {
+                Icon(Icons.Default.Search, null)
             }
-        }
+        )
+
+        Spacer(Modifier.height(15.dp))
+
+        MenuGrid(
+            when (type) {
+                "Friends" -> listOf(
+                    "Friends", "Following",
+                    "Followers", "Friend Requests"
+                )
+                "Voice Rooms" -> listOf(
+                    "Public Rooms", "Official Rooms",
+                    "Create Room", "Join Room"
+                )
+                else -> listOf(
+                    "Inbox", "Message Requests",
+                    "Notifications"
+                )
+            },
+            onPage
+        )
+
+        Spacer(Modifier.height(20.dp))
+
+        Text(
+            "Connect the online backend to load real users and live data.",
+            color = Color.LightGray,
+            fontSize = 12.sp
+        )
     }
 }
 
-@Composable
-fun SectionTitle(title: String) {
+/* REUSABLE COMPONENTS */
 
+@Composable
+fun Section(text: String) {
     Text(
-        title,
-        color = Cyan,
-        fontSize = 13.sp,
+        text,
+        color = CYAN,
+        fontSize = 14.sp,
         fontWeight = FontWeight.Bold,
         modifier = Modifier.padding(bottom = 10.dp)
     )
+}
+
+@Composable
+fun Stat(label: String, value: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, color = WHITE, fontWeight = FontWeight.Bold)
+        Text(label, color = Color.LightGray, fontSize = 11.sp)
+    }
+}
+
+@Composable
+fun Avatar(style: String, size: Int) {
+
+    val colors = when {
+        style.contains("Royal") || style.contains("Crown") ->
+            listOf(GOLD, Color(0xFFFF783C))
+        style.contains("Galaxy") || style.contains("Dragon") ->
+            listOf(PURPLE, PINK)
+        else -> listOf(CYAN, PURPLE)
+    }
+
+    Box(
+        Modifier
+            .size(size.dp)
+            .border(
+                5.dp,
+                Brush.sweepGradient(colors),
+                CircleShape
+            )
+            .padding(7.dp)
+            .background(CARD, CircleShape),
+        Alignment.Center
+    ) {
+        Icon(
+            Icons.Default.Person,
+            null,
+            tint = WHITE,
+            modifier = Modifier.size((size * .55f).dp)
+        )
+    }
+}
+
+@Composable
+fun CosmeticIcon(category: String) {
+    val icon = when (category) {
+        "Frames" -> Icons.Default.Circle
+        "Entry Effects" -> Icons.Default.Bolt
+        "Badges" -> Icons.Default.Verified
+        "Titles" -> Icons.Default.EmojiEvents
+        "Backgrounds" -> Icons.Default.Landscape
+        "Chat Bubbles" -> Icons.Default.ChatBubble
+        else -> Icons.Default.AutoAwesome
+    }
+
+    Icon(
+        icon,
+        null,
+        tint = GOLD,
+        modifier = Modifier.size(35.dp)
+    )
+}
+
+@Composable
+fun Balance(
+    label: String,
+    amount: Int,
+    color: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = modifier.clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = CARD
+        ),
+        shape = RoundedCornerShape(17.dp)
+    ) {
+        Column(Modifier.padding(15.dp)) {
+            Icon(
+                if (label.contains("Diamond"))
+                    Icons.Default.Diamond
+                else Icons.Default.MonetizationOn,
+                null,
+                tint = color
+            )
+            Text(label, color = Color.LightGray, fontSize = 11.sp)
+            Text(
+                amount.toString(),
+                color = WHITE,
+                fontWeight = FontWeight.Bold,
+                fontSize = 19.sp
+            )
+        }
+    }
 }
 
 @Composable
@@ -1450,53 +1608,36 @@ fun MenuGrid(
     items: List<String>,
     onClick: (String) -> Unit
 ) {
-
-    Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         items.chunked(2).forEach { pair ->
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 pair.forEach { item ->
-
                     Card(
-                        modifier = Modifier
+                        Modifier
                             .weight(1f)
-                            .clickable {
-                                onClick(item)
-                            },
+                            .clickable { onClick(item) },
                         colors = CardDefaults.cardColors(
-                            containerColor = CardBg
-                        ),
-                        shape = RoundedCornerShape(13.dp)
+                            containerColor = CARD
+                        )
                     ) {
-
                         Row(
                             Modifier.padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-
                             Text(
                                 item,
-                                color = AppWhite,
+                                color = WHITE,
                                 fontSize = 11.sp,
                                 modifier = Modifier.weight(1f)
                             )
-
                             Icon(
                                 Icons.Default.ChevronRight,
                                 null,
-                                tint = Cyan,
-                                modifier = Modifier.size(17.dp)
+                                tint = CYAN
                             )
                         }
                     }
                 }
-
                 if (pair.size == 1) {
                     Spacer(Modifier.weight(1f))
                 }
@@ -1506,70 +1647,52 @@ fun MenuGrid(
 }
 
 @Composable
-fun BackHeader(
+fun MenuRow(
     title: String,
-    onBack: () -> Unit
+    onClick: () -> Unit
 ) {
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically
+    Card(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = CARD
+        ),
+        shape = RoundedCornerShape(13.dp)
     ) {
-
-        IconButton(onClick = onBack) {
+        Row(
+            Modifier.padding(15.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                title,
+                color = WHITE,
+                modifier = Modifier.weight(1f)
+            )
             Icon(
-                Icons.Default.ArrowBack,
+                Icons.Default.ChevronRight,
                 null,
-                tint = AppWhite
+                tint = CYAN
             )
         }
-
-        Text(
-            title,
-            color = AppWhite,
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp
-        )
     }
 }
 
 @Composable
-fun SimpleScreen(
+fun Header(
     title: String,
-    description: String,
-    padding: PaddingValues
+    onBack: () -> Unit
 ) {
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)
-            .padding(20.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        Icon(
-            Icons.Default.GraphicEq,
-            null,
-            tint = Purple,
-            modifier = Modifier.size(65.dp)
-        )
-
-        Spacer(Modifier.height(15.dp))
-
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        IconButton(onClick = onBack) {
+            Icon(Icons.Default.ArrowBack, null, tint = WHITE)
+        }
         Text(
             title,
-            color = AppWhite,
-            fontSize = 23.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(Modifier.height(10.dp))
-
-        Text(
-            description,
-            color = AppWhite.copy(alpha = 0.7f),
-            textAlign = TextAlign.Center
+            color = WHITE,
+            fontSize = 21.sp,
+            fontWeight = FontWeight.Black
         )
     }
 }
