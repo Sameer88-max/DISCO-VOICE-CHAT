@@ -15,8 +15,8 @@ android {
         minSdk = 23
         targetSdk = 35
 
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
     }
 
     buildFeatures {
@@ -35,9 +35,10 @@ android {
 
 dependencies {
 
-    // Android Compose
+    // Compose BOM
     implementation(platform("androidx.compose:compose-bom:2024.12.01"))
 
+    // Android Compose
     implementation("androidx.activity:activity-compose:1.10.0")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
@@ -55,6 +56,12 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+
+    // Cloudinary image upload
+    implementation("io.coil-kt:coil-compose:2.7.0")
+
+    // Image picker support
+    implementation("androidx.activity:activity-ktx:1.10.0")
 
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
