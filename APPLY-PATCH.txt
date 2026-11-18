@@ -1,0 +1,31 @@
+DISCO VOICE CHAT - OWNER PANEL + ANDROID BUILD PATCH
+
+This ZIP is laid out using repository-relative paths. Extract it, then upload/merge
+its contents into the ROOT of Sameer88-max/DISCO-VOICE-CHAT.
+
+Included paths:
+- firebase.json
+- functions/index.js and functions/package.json
+- owner-panel/index.html, README.md, firebase-config.example.js
+- scripts/set-owner-claim.js
+- app/build.gradle.kts (adds AppCompat + Material Components needed by XML resources)
+- app/src/main/res/drawable/*.xml (adds the missing profile backgrounds)
+- app/src/main/res/values/styles.xml (adds CircleImageStyle)
+- app/src/main/res/mipmap/ic_launcher_round.xml (adds launcher image fallback)
+
+IMPORTANT:
+1. Preserve the folder structure when uploading. Merge the app/ folder with the
+   existing app/ folder; do not replace the whole app source folder.
+2. The owner panel needs owner-panel/firebase-config.js created from the Firebase
+   Web App config for the SAME Firebase project as the Android app.
+3. Set CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET as Firebase Functions secrets.
+   Never put either secret or service-account JSON in GitHub or in the Android app.
+4. The owner account must be assigned the owner:true custom claim using the trusted
+   Admin SDK script in scripts/set-owner-claim.js.
+5. The current Android Store is still static. This patch supplies the panel/backend
+   starter and fixes the missing Android resource references, but does NOT yet make
+   the installed APK read storeItems or securely purchase/equip frames. That requires
+   a separate MainActivity.kt Store migration.
+6. Do not deploy restrictive Firestore rules until that Android wallet/store migration
+   is complete; existing app code still writes wallet/cosmetic fields from the client.
+7. GitHub write access returned HTTP 403, so these files have NOT been committed by us.
