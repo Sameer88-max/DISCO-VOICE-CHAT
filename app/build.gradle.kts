@@ -60,6 +60,9 @@ dependencies {
     // Cloudinary image upload
     implementation("io.coil-kt:coil-compose:2.7.0")
 
+    // Material Components - Resource support
+    implementation("com.google.android.material:material:1.12.0")
+
     // Image picker support
     implementation("androidx.activity:activity-ktx:1.10.0")
 
